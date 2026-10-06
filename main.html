@@ -376,7 +376,7 @@
 </head>
 <body>
 
-  <div class="stage play" id="stage">
+  <div class="stage" id="stage">
 
     <div class="shock"></div>
     <div class="shock shock2"></div>
@@ -437,6 +437,31 @@
 <script>
   const stage  = document.getElementById('stage');
   const replay = document.getElementById('replay');
+
+  // 等所有图片加载完再开始动画
+  function startWhenReady(){
+    const imgs  = Array.from(document.querySelectorAll('img'));
+    const total = imgs.length;
+    let loaded  = 0;
+
+    function tryStart(){
+      loaded++;
+      if (loaded >= total) {
+        stage.classList.add('play');
+      }
+    }
+
+    imgs.forEach(img => {
+      if (img.complete) {
+        tryStart();
+      } else {
+        img.addEventListener('load',  tryStart, { once:true });
+        img.addEventListener('error', tryStart, { once:true });
+      }
+    });
+  }
+
+  startWhenReady();
 
   replay.addEventListener('click', () => {
     stage.classList.remove('play');
