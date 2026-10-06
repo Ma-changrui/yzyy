@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>骗你的，这才是真身</title>
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; }
+  body{
+    background:radial-gradient(circle at 50% 40%, #2b3150 0%, #14161f 65%, #0b0c12 100%);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    overflow:hidden;
+    display:grid;
+    place-items:center;
+  }
+
+  .stage{
+    position:relative;
+    width:min(92vw,620px);
+    aspect-ratio:1/1;
+    display:grid;
+    place-items:center;
+    perspective:900px;
+  }
+
+  /* ============ 卡片通用 ============ */
+  .card{
+    position:absolute;
+    left:50%; top:50%;
+    width:min(56vw,300px);
+    transform:translate(-50%,-50%);
+    opacity:0;
+    will-change:transform,opacity;
+  }
+  .inner{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transform-origin:50% 42%;
+  }
+  .pic{
+    display:block;
+    width:100%;
+    height:auto;
+    border-radius:26px;
+    box-shadow:0 26px 55px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08) inset;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  .tag{
+    margin-top:16px;
+    padding:8px 18px;
+    border-radius:999px;
+    font-size:clamp(15px,4vw,21px);
+    font-weight:800;
+    letter-spacing:.04em;
+    white-space:nowrap;
+    color:#fff;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.20);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .card1 .tag{
+    background:rgba(255,107,107,.18);
+    border-color:rgba(255,140,140,.45);
+  }
+  .card2 .tag{
+    color:#0a1020;
+    background:linear-gradient(135deg,#9fe4ff,#65b6ff 55%,#7cf0d0);
+    border-color:rgba(255,255,255,.6);
+    box-shadow:0 0 26px rgba(90,190,255,.65), 0 8px 22px rgba(0,0,0,.45);
+    opacity:0;
+  }
+  .card2 .pic{
+    box-shadow:0 26px 60px rgba(0,0,0,.65),
+               0 0 40px rgba(80,180,255,.45),
+               0 0 0 1px rgba(255,255,255,.14) inset;
+  }
+
+  /* ============ 冲击波 ============ */
+  .shock{
+    position:absolute;
+    left:50%; top:50%;
+    width:340px; height:340px;
+    border-radius:50%;
+    border:5px solid rgba(180,230,255,.9);
+    opacity:0;
+    pointer-events:none;
+    transform:translate(-50%,-50%) scale(.2);
+  }
+  .shock2{
+    border-width:2px;
+    border-color:rgba(255,255,255,.75);
+  }
+
+  /* ============ 箭头 + 文字标注（图片2用） ============ */
+  .callout{
+    position:absolute;
+    top:50%;
+    left:calc(50% + min(21.8vw,117px) + 22px);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    opacity:0;
+    pointer-events:none;
+    transform:translate(26px,-50%);
+    transform-origin:center center;
+    will-change:transform,opacity;
+  }
+  .arrow{
+    position:relative;
+    flex:none;
+    width:56px;
+    height:3px;
+    border-radius:2px;
+    background:linear-gradient(90deg,#7cf0d0,#9fe4ff);
+    box-shadow:0 0 14px rgba(124,240,208,.85);
+  }
+  .arrow::before{
+    content:"";
+    position:absolute;
+    left:0; top:50%;
+    transform:translate(-100%,-50%);
+    border:7px solid transparent;
+    border-right-color:#7cf0d0;
+    filter:drop-shadow(0 0 6px rgba(124,240,208,.9));
+  }
+  .callout-text{
+    font-size:17px;
+    font-weight:800;
+    line-height:1.2;
+    color:#7cf0d0;
+    text-shadow:0 0 16px rgba(124,240,208,.75);
+    white-space:nowrap;
+  }
+
+  /* ============ 图片分组通用 ============ */
+  .grp{
+    position:absolute;
+    display:flex;
+    align-items:center;
+    opacity:0;
+    pointer-events:none;
+    will-change:transform,opacity;
+  }
+
+  /* 图片3：正方形 */
+  .pic-sm{
+    width:clamp(52px,11vw,78px);
+    height:auto;
+    border-radius:14px;
+    box-shadow:0 12px 28px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1) inset;
+    display:block;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+
+  /* 左右两侧：长方形 3:2 */
+  .pic-rect{
+    width:clamp(78px,17vw,112px);
+    aspect-ratio:3 / 2;
+    height:auto;
+    object-fit:cover;
+    border-radius:14px;
+    box-shadow:0 12px 28px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1) inset;
+    display:block;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  .pic-rect-sm{
+    width:clamp(64px,14vw,92px);
+    aspect-ratio:3 / 2;
+    height:auto;
+    object-fit:cover;
+    border-radius:12px;
+    box-shadow:0 10px 22px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.1) inset;
+    display:block;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+
+  .tag-sm{
+    padding:4px 11px;
+    border-radius:999px;
+    font-size:clamp(11px,2.6vw,13px);
+    font-weight:800;
+    white-space:nowrap;
+    color:#0a1020;
+    background:linear-gradient(135deg,#9fe4ff,#65b6ff 55%,#7cf0d0);
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow:0 0 14px rgba(90,190,255,.5);
+  }
+  .tag-sm.pink{
+    color:#fff;
+    background:rgba(255,107,107,.2);
+    border-color:rgba(255,140,140,.5);
+    box-shadow:0 0 14px rgba(255,120,120,.4);
+  }
+  .mid-tag{
+    font-size:clamp(10px,2.4vw,12px);
+    font-weight:800;
+    color:#7cf0d0;
+    text-shadow:0 0 10px rgba(124,240,208,.7);
+    white-space:nowrap;
+  }
+
+  /* ============ 指向图片2的小箭头 ============ */
+  .pt{
+    flex:none;
+    width:0; height:0;
+    border:8px solid transparent;
+    filter:drop-shadow(0 0 6px rgba(124,240,208,.9));
+  }
+  .pt-right{ border-left-color:#7cf0d0; }
+  .pt-left{ border-right-color:#7cf0d0; }
+
+  /* ============ 三组定位 ============ */
+  /* 组3：图片3 —— 图片2正上方，无箭头 */
+  .grp3{
+    left:50%; top:13%;
+    flex-direction:column;
+    transform:translate(-50%,0);
+    gap:6px;
+  }
+  /* 组4：左边两张长方形 —— 垂直两排，右侧箭头指向图片2 */
+  .grp4{
+    left:4%; top:60%;
+    transform:translate(0,-50%);
+    gap:6px;
+  }
+  .grp4 .col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  /* 组5：右边一张长方形 —— 左侧箭头指向图片2 */
+  .grp5{
+    right:11%; top:60%;
+    transform:translate(0,-50%);
+    gap:6px;
+  }
+  .grp5 .col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+
+  /* ============ mover：图片2的最终移动 ============ */
+  .mover{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    transform-origin:50% 50%;
+    will-change:transform;
+  }
+
+  /* ============ 时间轴 ============ */
+  @keyframes card1{
+    0%   { opacity:0; transform:translate(-50%,-50%) scale(.5) rotate(-10deg); }
+    16%  { opacity:1; transform:translate(-50%,-50%) scale(1.08) rotate(1.5deg); }
+    21%  { opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+    68%  { opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+    71%  { opacity:1; transform:translate(-44%,-50%) scale(.94) rotate(4deg); }
+    100% { opacity:0; transform:translate(370%,-46%) scale(.62) rotate(44deg); }
+  }
+
+  @keyframes card2{
+    0%, 61% { opacity:0; transform:translate(-420%,-46%) scale(1.16) rotate(-26deg); }
+    63%     { opacity:1; transform:translate(-310%,-48%) scale(1.12) rotate(-16deg); }
+    73%     { opacity:1; transform:translate(-42%,-50%) scale(1.05) rotate(3.5deg); }
+    77%     { opacity:1; transform:translate(-57%,-50%) scale(.97) rotate(-2.5deg); }
+    82%     { opacity:1; transform:translate(-45%,-50%) scale(1.02) rotate(1.2deg); }
+    88%     { opacity:1; transform:translate(-53%,-50%) scale(1) rotate(-.6deg); }
+    100%    { opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+  }
+
+  @keyframes tag2{
+    0%   { opacity:0; transform:translateY(14px) scale(.7); }
+    100% { opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  @keyframes shock{
+    0%, 69% { opacity:0; transform:translate(-50%,-50%) scale(.15); }
+    71%     { opacity:.95; transform:translate(-50%,-50%) scale(.38); }
+    100%    { opacity:0; transform:translate(-50%,-50%) scale(1.7); }
+  }
+  @keyframes shock2{
+    0%, 69% { opacity:0; transform:translate(-50%,-50%) scale(.1); }
+    73%     { opacity:.6; transform:translate(-50%,-50%) scale(.3); }
+    100%    { opacity:0; transform:translate(-50%,-50%) scale(1.35); }
+  }
+
+  @keyframes shake{
+    0%, 69% { transform:translate(0,0); }
+    71%     { transform:translate(-7px,4px); }
+    73%     { transform:translate(6px,-4px); }
+    75%     { transform:translate(-5px,3px); }
+    78%     { transform:translate(4px,-2px); }
+    81%     { transform:translate(-2px,1px); }
+    84%,100%{ transform:translate(0,0); }
+  }
+
+  @keyframes shrink2{
+    0%   { transform:scale(1); }
+    100% { transform:scale(.78); }
+  }
+
+  @keyframes calloutAll{
+    0%   { opacity:0; transform:translate(26px,-50%) scale(.9); }
+    35%  { opacity:1; transform:translate(0,-50%)   scale(1); }
+    65%  { opacity:1; transform:translate(0,-50%)   scale(1); }
+    100% { opacity:0; transform:translate(14px,-50%) scale(.82); }
+  }
+
+  /* 图片2：缩小 + 下移，给两侧留空间 */
+  @keyframes mover2{
+    0%   { transform:translate(0,0) scale(1); }
+    100% { transform:translate(0,12%) scale(.7); }
+  }
+
+  @keyframes grp3{
+    0%   { opacity:0; transform:translate(-50%,-24px) scale(.4); }
+    100% { opacity:1; transform:translate(-50%,0)     scale(1); }
+  }
+
+  @keyframes grp4{
+    0%   { opacity:0; transform:translate(-30px,-50%) scale(.4); }
+    100% { opacity:1; transform:translate(0,-50%)     scale(1); }
+  }
+
+  @keyframes grp5{
+    0%   { opacity:0; transform:translate(30px,-50%) scale(.4); }
+    100% { opacity:1; transform:translate(0,-50%)    scale(1); }
+  }
+
+  /* ============ 播放规则 ============ */
+  .play .card1{ animation: card1 3.2s cubic-bezier(.22,.9,.3,1) both; }
+  .play .card2{ animation: card2 3.2s cubic-bezier(.2,.85,.25,1) both; }
+  .play .card2 .tag{ animation: tag2 .5s cubic-bezier(.34,1.56,.64,1) 2.6s both; }
+  .play .shock{ animation: shock 3.2s ease-out both; }
+  .play .shock2{ animation: shock2 3.2s ease-out both; }
+  .play{ animation: shake 3.2s linear both; }
+
+  .play .card2 .inner{ animation: shrink2 .7s cubic-bezier(.34,1.3,.64,1) 3.5s both; }
+  .play .callout{ animation: calloutAll 1.7s ease 3.9s both; }
+  .play .mover2{ animation: mover2 .8s cubic-bezier(.34,1.15,.64,1) 4.8s both; }
+  .play .grp3{ animation: grp3 .8s cubic-bezier(.34,1.4,.64,1) 5.0s both; }
+  .play .grp4{ animation: grp4 .8s cubic-bezier(.34,1.4,.64,1) 6.2s both; }
+  .play .grp5{ animation: grp5 .8s cubic-bezier(.34,1.4,.64,1) 7.4s both; }
+
+  /* ============ 重播按钮 ============ */
+  .replay{
+    position:fixed;
+    right:18px; bottom:18px;
+    padding:10px 20px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:14px;
+    font-family:inherit;
+    letter-spacing:.05em;
+    cursor:pointer;
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    transition:background .2s, transform .15s;
+  }
+  .replay:hover{ background:rgba(255,255,255,.18); }
+  .replay:active{ transform:scale(.94); }
+</style>
+</head>
+<body>
+
+  <div class="stage play" id="stage">
+
+    <div class="shock"></div>
+    <div class="shock shock2"></div>
+
+    <!-- 图片1 -->
+    <div class="card card1">
+      <div class="inner">
+        <img class="pic" alt="图片1" src="yzyy.png">
+        <div class="tag">这是杨中毅阳</div>
+      </div>
+    </div>
+
+    <!-- 图片2 + mover -->
+    <div class="mover mover2">
+      <div class="card card2">
+        <div class="inner">
+          <img class="pic" alt="图片2" src="true.jpg">
+          <div class="tag">骗你的，这才是真身</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 箭头 + 文字标注（指向图片2） -->
+    <div class="callout">
+      <div class="arrow"></div>
+      <div class="callout-text">她是一只猫娘（雌性）</div>
+    </div>
+
+    <!-- 组3：图片3 —— 图片2正上方（正方形，无箭头） -->
+    <div class="grp grp3">
+      <div class="tag-sm">XXX</div>
+      <img class="pic-sm" alt="图片3" src="pic3.png">
+    </div>
+
+    <!-- 组4：左边两张长方形，右侧箭头指向图片2 -->
+    <div class="grp grp4">
+      <div class="col">
+        <img class="pic-rect-sm" alt="左图A" src="leftA.png">
+        <div class="mid-tag">XXX</div>
+        <img class="pic-rect-sm" alt="左图B" src="leftB.png">
+      </div>
+      <div class="pt pt-right"></div>
+    </div>
+
+    <!-- 组5：右边一张长方形，左侧箭头指向图片2 -->
+    <div class="grp grp5">
+      <div class="pt pt-left"></div>
+      <div class="col">
+        <img class="pic-rect" alt="右边图" src="right.png">
+        <div class="tag-sm pink">XXX</div>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="replay" id="replay">重播 ▶</button>
+
+<script>
+  const stage  = document.getElementById('stage');
+  const replay = document.getElementById('replay');
+
+  replay.addEventListener('click', () => {
+    stage.classList.remove('play');
+    void stage.offsetWidth;
+    stage.classList.add('play');
+  });
+</script>
+</body>
+</html>
